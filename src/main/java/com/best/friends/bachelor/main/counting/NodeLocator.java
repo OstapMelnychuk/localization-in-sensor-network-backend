@@ -65,7 +65,6 @@ public class NodeLocator {
                 Node firstNode = anchorNodes.get(i);
                 Node secondNode = anchorNodes.get(j);
                 double distance = CountingUtils.countDistanceBetweenNodes(firstNode, secondNode);
-                System.out.println(distance);
                 if (CountingUtils.checkIfCirclesIntersect(firstNode, secondNode)) {
                     anchorNodesIntersectionPoints.addAll(countIntersectionPoint(firstNode, secondNode, distance));
                 }
