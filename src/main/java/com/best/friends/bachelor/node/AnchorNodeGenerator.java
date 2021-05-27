@@ -7,7 +7,6 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 public class AnchorNodeGenerator {
     private final NormalRandomNumbers randomNumbers;
-    private static final double MEAN = 200;
     private static final double VARIANCE = 200;
     private static final double WIFI_RADIUS = 300;
 
@@ -23,9 +22,5 @@ public class AnchorNodeGenerator {
         }
 
         return anchorNodes;
-    }
-
-    public int getRandomNumber(int min, int max) {
-        return (int) ((Math.random() * (max - min)) + min);
     }
 }

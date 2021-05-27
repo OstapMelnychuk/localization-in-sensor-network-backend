@@ -1,6 +1,5 @@
 package com.best.friends.bachelor.main.counting;
 
-import com.best.friends.bachelor.constants.NodeConstants;
 import com.best.friends.bachelor.node.*;
 
 import java.util.ArrayList;
@@ -146,8 +145,6 @@ public class NodeLocator {
 
             }
         }
-
-        anchorNodes.forEach(n -> System.out.println(CountingUtils.checkIfPointIsInTheCircle(mainNode, n)));
     }
 
     private boolean checkAllAnchorNodesIntersectWithEachOther(Node nodeToCheck, int iteration) {

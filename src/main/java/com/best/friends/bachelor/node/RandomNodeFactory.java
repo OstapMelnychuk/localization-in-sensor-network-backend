@@ -1,6 +1,5 @@
 package com.best.friends.bachelor.node;
 
-
 import com.best.friends.bachelor.random.NormalRandomNumbers;
 
 public class RandomNodeFactory {
