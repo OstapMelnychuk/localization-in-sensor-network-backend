@@ -15,15 +15,18 @@ public class NodeLocator {
     private NodeLocatorResponse nodeLocatorResponse;
     private int iterationQuantity;
     private List<IterationNodeTableRow> iterationNodeTable;
+    private static final double WIFI_RANGE = 300;
+    private static final double A = 0;
+    private AnchorNodeGenerator nodeGenerator;
 
     public void initiate(int anchorNodeQuantity, double calculationError, int iterationQuantity) {
         this.calculationError = calculationError;
         this.iterationQuantity = iterationQuantity;
-        mainNode = RandomNodeFactory.generateRandomNode();
-        AnchorNodeGenerator anchorNodeGenerator = new AnchorNodeGenerator(mainNode);
+        mainNode = new Node(0, 0, WIFI_RANGE);
+        nodeGenerator = new AnchorNodeGenerator(mainNode);
         System.out.println("Main Node");
         System.out.println(mainNode);
-        anchorNodes = anchorNodeGenerator.generateAnchorNodes(anchorNodeQuantity);
+        anchorNodes = nodeGenerator.generateAnchorNodes(anchorNodeQuantity);
         checkAllNodesBelongToMainNode(mainNode, anchorNodes, 0);
         System.out.println("Anchor Nodes:");
         anchorNodes.forEach(System.out::println);
@@ -43,8 +46,9 @@ public class NodeLocator {
 
     public NodeLocatorResponse addNode(NodeLocatorResponse initData, double calculationError, int iterationQuantity) {
         mainNode = initData.getMainNode();
+        nodeGenerator = new AnchorNodeGenerator(mainNode);
         anchorNodes = initData.getAnchorNodes();
-        anchorNodes.add(RandomNodeFactory.generateRandomNode());
+        anchorNodes.add(nodeGenerator.generateRandomNode());
         anchorNodesIntersectionPoints = new CopyOnWriteArrayList<>();
         iterationNodeTable = new ArrayList<>();
         this.iterationQuantity = iterationQuantity;
@@ -135,7 +139,7 @@ public class NodeLocator {
             boolean isIntersectingWithOtherAnchorNodes = checkAllAnchorNodesIntersectWithEachOther(node, i);
             boolean isNotCenterOfMainNodeInTheCircle = !CountingUtils.checkIfPointIsInTheCircle(node, mainNode);
             while ((isNotInTheRangeOfMainNode || !isIntersectingWithOtherAnchorNodes || isNotCenterOfMainNodeInTheCircle)) {
-                node = RandomNodeFactory.generateRandomNode();
+                node = nodeGenerator.generateRandomNode();
                 anchorNodes.set(i, node);
                 node.setWifiRange(CountingUtils.countDistanceBetweenNodes(mainNode, node) * calculationError);
                 isNotInTheRangeOfMainNode = !CountingUtils.checkIfPointIsInTheCircle(mainNode, node);
