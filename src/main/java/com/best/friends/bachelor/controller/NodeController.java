@@ -18,7 +18,7 @@ public class NodeController {
     private NodeLocatorIterationService nodeLocatorIterationService = new NodeLocatorIterationService();
 
     @GetMapping("locate/{quantity}/{calculationError}/{iterationQuantity}")
-    @Transactional(timeout = 100)
+    @Transactional(timeout = 1000)
     public ResponseEntity<NodeLocatorResponse> locateNodes(@PathVariable int quantity, @PathVariable double calculationError,
                                                            @PathVariable int iterationQuantity) {
         nodeLocator.initiate(quantity, calculationError, iterationQuantity);
@@ -26,7 +26,7 @@ public class NodeController {
     }
 
     @PostMapping("locate/addNode/{calculationError}/{iterationQuantity}")
-    @Transactional(timeout = 100)
+    @Transactional(timeout = 1000)
     public ResponseEntity<NodeLocatorResponse> addNewNode(@RequestBody NodeLocatorResponse initData, @PathVariable double calculationError,
                                                           @PathVariable int iterationQuantity) {
         nodeLocator = new NodeLocator();
@@ -34,7 +34,7 @@ public class NodeController {
     }
 
     @GetMapping("locate/iterative/{quantityFrom}/{quantityTo}/{calculationError}/{iterationQuantity}")
-    @Transactional(timeout = 100)
+    @Transactional(timeout = 1000)
     public ResponseEntity<List<IterationServiceResponse>> iterativeComparison(@PathVariable int quantityFrom, @PathVariable int quantityTo, @PathVariable double calculationError,
                                                                              @PathVariable int iterationQuantity) {
         return ResponseEntity.ok(nodeLocatorIterationService.countAndPrepareResponse(quantityFrom, quantityTo, calculationError, iterationQuantity));
