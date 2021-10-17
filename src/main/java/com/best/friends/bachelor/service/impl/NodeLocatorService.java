@@ -1,13 +1,15 @@
-package com.best.friends.bachelor.main.counting;
+package com.best.friends.bachelor.service.impl;
 
+import com.best.friends.bachelor.main.counting.NodeLocatorResponse;
 import com.best.friends.bachelor.node.*;
+import com.best.friends.bachelor.service.BaseNodeLocator;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Collectors;
 
-public class NodeLocator {
+public class NodeLocatorService implements BaseNodeLocator {
     private Node mainNode;
     private List<Node> anchorNodes;
     private double calculationError = 1.1d;
@@ -19,23 +21,21 @@ public class NodeLocator {
     private static final double A = 0;
     private AnchorNodeGenerator nodeGenerator;
 
-    public void initiate(int anchorNodeQuantity, double calculationError, int iterationQuantity) {
+    private void initiate(int anchorNodeQuantity, double calculationError, int iterationQuantity) {
         this.calculationError = calculationError;
         this.iterationQuantity = iterationQuantity;
         mainNode = new Node(0, 0, WIFI_RANGE);
         nodeGenerator = new AnchorNodeGenerator(mainNode);
-        System.out.println("Main Node");
-        System.out.println(mainNode);
         anchorNodes = nodeGenerator.generateAnchorNodes(anchorNodeQuantity);
-        checkAllNodesBelongToMainNode(mainNode, anchorNodes, 0);
-        System.out.println("Anchor Nodes:");
+        nodeGenerator.checkAllNodesBelongToMainNode(mainNode, anchorNodes, 0, calculationError);
         anchorNodes.forEach(System.out::println);
         anchorNodesIntersectionPoints = new CopyOnWriteArrayList<>();
         nodeLocatorResponse = new NodeLocatorResponse();
         iterationNodeTable = new ArrayList<>();
     }
 
-    public NodeLocatorResponse start() {
+    public NodeLocatorResponse generateAndLocateNodes(int anchorNodeQuantity, double calculationError, int iterationQuantity) {
+        initiate(anchorNodeQuantity, calculationError, iterationQuantity);
         findAnchorNodeIntersectionPointsMoreThanFour(0);
         filterPoints();
         Node mainNodeLoc = locateMainNode();
@@ -54,12 +54,10 @@ public class NodeLocator {
         this.iterationQuantity = iterationQuantity;
         this.calculationError = calculationError;
         nodeLocatorResponse = new NodeLocatorResponse();
-        checkAllNodesBelongToMainNode(mainNode, anchorNodes, anchorNodes.size() - 1);
+        nodeGenerator.checkAllNodesBelongToMainNode(mainNode, anchorNodes, anchorNodes.size() - 1, calculationError);
         findAnchorNodeIntersectionPointsMoreThanFour(0);
         filterPoints();
         Node mainNodeLoc = locateMainNode();
-        System.out.println("Main node loc:");
-        System.out.println(mainNodeLoc);
         return iterative(mainNodeLoc);
     }
 
@@ -131,38 +129,10 @@ public class NodeLocator {
         nodeLocatorResponse.setFilteredPoints(new ArrayList<>(anchorNodesIntersectionPoints));
     }
 
-    private void checkAllNodesBelongToMainNode(Node mainNode, List<Node> anchorNodes, int startPosition) {
-        for (int i = startPosition; i < anchorNodes.size(); i++) {
-            Node node = anchorNodes.get(i);
-            node.setWifiRange(CountingUtils.countDistanceBetweenNodes(mainNode, node) * calculationError);
-            boolean isNotInTheRangeOfMainNode = !CountingUtils.checkIfPointIsInTheCircle(mainNode, node);
-            boolean isIntersectingWithOtherAnchorNodes = checkAllAnchorNodesIntersectWithEachOther(node, i);
-            boolean isNotCenterOfMainNodeInTheCircle = !CountingUtils.checkIfPointIsInTheCircle(node, mainNode);
-            while ((isNotInTheRangeOfMainNode || !isIntersectingWithOtherAnchorNodes || isNotCenterOfMainNodeInTheCircle)) {
-                node = nodeGenerator.generateRandomNode();
-                anchorNodes.set(i, node);
-                node.setWifiRange(CountingUtils.countDistanceBetweenNodes(mainNode, node) * calculationError);
-                isNotInTheRangeOfMainNode = !CountingUtils.checkIfPointIsInTheCircle(mainNode, node);
-                isIntersectingWithOtherAnchorNodes = checkAllAnchorNodesIntersectWithEachOther(node, i);
-                isNotCenterOfMainNodeInTheCircle = !CountingUtils.checkIfPointIsInTheCircle(node, mainNode);
-
-            }
-        }
-    }
-
-    private boolean checkAllAnchorNodesIntersectWithEachOther(Node nodeToCheck, int iteration) {
-        for (int i = 0; i < iteration; i++) {
-            if (!CountingUtils.checkIfCirclesIntersect(nodeToCheck, anchorNodes.get(i))) {
-                return false;
-            }
-        }
-        return true;
-    }
-
     private NodeLocatorResponse iterative(Node mainNodeLoc) {
         System.out.println("After Iterations");
         for (int i = 0; i < iterationQuantity; i++) {
-            anchorNodesIntersectionPoints.remove(countBiggestDistanceToLocatedPoint(mainNodeLoc));
+            anchorNodesIntersectionPoints.remove(countLowestDistanceToLocatedPoint(mainNodeLoc));
             anchorNodesIntersectionPoints.add(mainNodeLoc);
             mainNodeLoc = locateMainNode();
             iterationNodeTable.add(new IterationNodeTableRow(mainNodeLoc,
@@ -176,7 +146,6 @@ public class NodeLocator {
         nodeLocatorResponse.setPoints(anchorNodesIntersectionPoints);
         nodeLocatorResponse.setMainNodeLoc(mainNodeLoc);
         nodeLocatorResponse.setIterationTable(iterationNodeTable);
-        nodeLocatorResponse.saveAllFieldsInFiles();
         return nodeLocatorResponse;
     }
 
@@ -197,6 +166,23 @@ public class NodeLocator {
         return node;
     }
 
+    public Node countLowestDistanceToLocatedPoint(Node mainNodeLoc) {
+        List<Double> distances = new ArrayList<>();
+        for (Node point : anchorNodesIntersectionPoints) {
+            distances.add(CountingUtils.countDistanceBetweenNodes(mainNodeLoc, point));
+        }
+        double lowestDistance = 10000000;
+        Node node = null;
+
+        for (int i = 0; i < distances.size(); i++) {
+            if (lowestDistance > distances.get(i)) {
+                lowestDistance = distances.get(i);
+                node = anchorNodesIntersectionPoints.get(i);
+            }
+        }
+        return node;
+    }
+
 
     private Node locateMainNode() {
         double x = 0;
@@ -208,6 +194,6 @@ public class NodeLocator {
         x = x / anchorNodesIntersectionPoints.size();
         y = y / anchorNodesIntersectionPoints.size();
 
-        return new Node(x, y, 100);
+        return new Node(x, y, 0);
     }
 }

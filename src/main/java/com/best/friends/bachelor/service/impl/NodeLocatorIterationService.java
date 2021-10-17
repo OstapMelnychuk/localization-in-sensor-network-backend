@@ -1,6 +1,5 @@
-package com.best.friends.bachelor.service;
+package com.best.friends.bachelor.service.impl;
 
-import com.best.friends.bachelor.main.counting.NodeLocator;
 import com.best.friends.bachelor.main.counting.NodeLocatorResponse;
 import com.best.friends.bachelor.model.IterationServiceResponse;
 import com.best.friends.bachelor.node.CountingUtils;
@@ -11,17 +10,16 @@ import java.util.List;
 import java.util.Map;
 
 public class NodeLocatorIterationService {
-    private NodeLocator nodeLocator;
+    private NodeLocatorService nodeLocatorService;
 
     public NodeLocatorIterationService() {
-        nodeLocator = new NodeLocator();
+        nodeLocatorService = new NodeLocatorService();
     }
 
     private List<NodeLocatorResponse> countIteration(int quantity, double countingError, int iterationQuantity) {
         List<NodeLocatorResponse> results = new ArrayList<>();
         for (int i = 0; i < iterationQuantity; i++) {
-            nodeLocator.initiate(quantity, countingError, 0);
-            results.add(nodeLocator.start());
+            results.add(nodeLocatorService.generateAndLocateNodes(quantity, countingError, 0));
         }
         return results;
     }
@@ -34,19 +32,23 @@ public class NodeLocatorIterationService {
             double max = 0;
             double average = 0;
             int iteration = 1;
+            NodeLocatorResponse minCase = new NodeLocatorResponse();
+            NodeLocatorResponse maxCase = new NodeLocatorResponse();
             List<NodeLocatorResponse> results = countIteration(i, countingError, iterationQuantity);
             for (NodeLocatorResponse nodeLocatorResponse : results) {
                 double precision = CountingUtils.countDistanceBetweenNodes(nodeLocatorResponse.getMainNode(), nodeLocatorResponse.getMainNodeLoc());
                 if (precision > max) {
                     max = precision;
-                } else if (precision < min) {
+                    maxCase = nodeLocatorResponse;
+                } if (precision < min) {
                     min = precision;
+                    minCase = nodeLocatorResponse;
                 }
                 average += precision;
                 resultTable.put(iteration++, precision);
             }
             average = average / results.size();
-            responses.add(new IterationServiceResponse(min, max, average, resultTable));
+            responses.add(new IterationServiceResponse(min, max, average, resultTable, minCase, maxCase));
         }
         return responses;
     }

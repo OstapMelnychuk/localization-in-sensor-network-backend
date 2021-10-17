@@ -1,5 +1,7 @@
 package com.best.friends.bachelor.model;
 
+import com.best.friends.bachelor.main.counting.NodeLocatorResponse;
+import com.best.friends.bachelor.node.Node;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -16,4 +18,7 @@ public class IterationServiceResponse {
     private double max;
     private double average;
     private Map<Integer, Double> iterationPrecision;
+    private NodeLocatorResponse minCase;
+    private NodeLocatorResponse maxCase;
+
 }
